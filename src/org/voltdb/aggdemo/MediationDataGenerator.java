@@ -98,8 +98,11 @@ public class MediationDataGenerator {
     private static final String SESSION_Q_EMPTY = "SESSION_Q_EMPTY";
 
     public static final String SESSION_ENDED = "SESSION_ENDED";
-    
+
     public static final String KAFKA_PARTITONER_NAME = "KAFKA_PARTITONER_NAME";
+
+    private static final int WRITE_TO_KAFKA_WITH_CONSUMER = 1;
+    private static final int WRITE_TO_KAFKA_BUT_NO_CONSUMER = 2;
 
     public static SafeHistogramCache shc = SafeHistogramCache.getInstance();
 
@@ -162,7 +165,7 @@ public class MediationDataGenerator {
         this.lateRatio = lateRatio;
         this.dateis1970Ratio = dateis1970Ratio;
 
-        if (useKafkaFlag > 0) {
+        if (useKafkaFlag == WRITE_TO_KAFKA_WITH_CONSUMER || useKafkaFlag == WRITE_TO_KAFKA_BUT_NO_CONSUMER ) {
             useKafka = true;
         }
 
@@ -190,9 +193,14 @@ public class MediationDataGenerator {
         arc = new AggregatedRecordConsumer(hostnames);
 
         msg("Start Agg record consumer");
-        Thread thread = new Thread(arc, "AggRecordConsumer");
-        thread.start();
-        msg("Agg record consumer is thread " + thread.getName());
+
+        if (useKafkaFlag == WRITE_TO_KAFKA_WITH_CONSUMER) {
+            
+            Thread thread = new Thread(arc, "AggRecordConsumer");
+            thread.start();
+            msg("Agg record consumer is thread " + thread.getName());
+            
+        }
 
     }
 
@@ -208,101 +216,112 @@ public class MediationDataGenerator {
         long lastReportedRecordCount = 0;
         double actualTps = 0;
 
-        while (System.currentTimeMillis() < (startMs + (1000 * durationSeconds))) {
-
-            recordCount++;
-
-            ActiveSession pseudoRandomSession = getPseudoRandomSession(offset);
-            final String actualNumber = NUM_PREFIX + pseudoRandomSession.getNumber();
-
-            MediationSession ourSession = sessionMap.get(actualNumber);
-
-            if (ourSession == null) {
-                ourSession = new MediationSession(actualNumber, getRandomDestinationId(), +(offset + sessionId++), r);
-                sessionMap.put(actualNumber, ourSession);
+        if (tpMs == 0) {
+            // tpMs == 0 if we only want to run the Consumer process
+            try {
+                Thread.sleep(1000 * durationSeconds, 0);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
+        } else {
 
-            MediationMessage nextCdr = ourSession.getNextCdr();
+            while (System.currentTimeMillis() < (startMs + (1000 * durationSeconds))) {
 
-            // Now decide what to do. We could just send the CDR, but where's the fun in
-            // that?
+                recordCount++;
 
-            if (missingRatio > 0 && r.nextInt(missingRatio) == 0) {
-                // Let's just pretend this CDR never happened...
-                missingCount++;
-            } else if (dupRatio > 0 && r.nextInt(dupRatio) == 0) {
+                ActiveSession pseudoRandomSession = getPseudoRandomSession(offset);
+                final String actualNumber = NUM_PREFIX + pseudoRandomSession.getNumber();
 
-                // let's send it. Lot's of times...
-                for (int i = 0; i < 2 + r.nextInt(10); i++) {
-                    send(nextCdr, pseudoRandomSession);
+                MediationSession ourSession = sessionMap.get(actualNumber);
+
+                if (ourSession == null) {
+                    ourSession = new MediationSession(actualNumber, getRandomDestinationId(), +(offset + sessionId++),
+                            r);
+                    sessionMap.put(actualNumber, ourSession);
                 }
 
-                // Also add it to a list of dup messages to send again, later...
-                dupMessages.add(nextCdr);
-                dupCount++;
+                MediationMessage nextCdr = ourSession.getNextCdr();
 
-            } else if (lateRatio > 0 && r.nextInt(lateRatio) == 0) {
+                // Now decide what to do. We could just send the CDR, but where's the fun in
+                // that?
 
-                // Add it to a list of late messages to send later...
-                lateMessages.add(nextCdr);
-                lateCount++;
+                if (missingRatio > 0 && r.nextInt(missingRatio) == 0) {
+                    // Let's just pretend this CDR never happened...
+                    missingCount++;
+                } else if (dupRatio > 0 && r.nextInt(dupRatio) == 0) {
 
-            } else if (dateis1970Ratio > 0 && r.nextInt(dateis1970Ratio) == 0) {
-
-                // Set date to Jan 1, 1970, and then send it...
-                nextCdr.setRecordStartUTC(0);
-                send(nextCdr, pseudoRandomSession);
-                dateis1970Count++;
-
-            } else {
-
-                send(nextCdr, pseudoRandomSession);
-                normalCDRCount++;
-
-            }
-
-            if (tpThisMs++ > tpMs) {
-
-                // but sleep if we're moving too fast...
-                while (currentMs == System.currentTimeMillis()) {
-                    try {
-                        Thread.sleep(0, 50000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
+                    // let's send it. Lot's of times...
+                    for (int i = 0; i < 2 + r.nextInt(10); i++) {
+                        send(nextCdr, pseudoRandomSession);
                     }
+
+                    // Also add it to a list of dup messages to send again, later...
+                    dupMessages.add(nextCdr);
+                    dupCount++;
+
+                } else if (lateRatio > 0 && r.nextInt(lateRatio) == 0) {
+
+                    // Add it to a list of late messages to send later...
+                    lateMessages.add(nextCdr);
+                    lateCount++;
+
+                } else if (dateis1970Ratio > 0 && r.nextInt(dateis1970Ratio) == 0) {
+
+                    // Set date to Jan 1, 1970, and then send it...
+                    nextCdr.setRecordStartUTC(0);
+                    send(nextCdr, pseudoRandomSession);
+                    dateis1970Count++;
+
+                } else {
+
+                    send(nextCdr, pseudoRandomSession);
+                    normalCDRCount++;
+
                 }
 
-                currentMs = System.currentTimeMillis();
-                tpThisMs = 0;
+                if (tpThisMs++ > tpMs) {
+
+                    // but sleep if we're moving too fast...
+                    while (currentMs == System.currentTimeMillis()) {
+                        try {
+                            Thread.sleep(0, 50000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    currentMs = System.currentTimeMillis();
+                    tpThisMs = 0;
+                }
+
+                if (lateMessages.size() > 100000 || dupMessages.size() > 100000) {
+                    sendRemainingMessages();
+                }
+
+                if (laststatstime + 10000 < System.currentTimeMillis()) {
+
+                    double recordsProcessed = recordCount - lastReportedRecordCount;
+                    actualTps = 1000 * (recordsProcessed / (System.currentTimeMillis() - laststatstime));
+
+                    msg("Offset = " + offset + " Record " + recordCount + " TPS=" + (long) actualTps);
+                    msg("Active Sessions: " + sessionMap.size());
+                    msg("Bursting Sessions: " + activeSessionQueue.size());
+
+                    msg(shc.toString());
+
+                    laststatstime = System.currentTimeMillis();
+                    lastReportedRecordCount = recordCount;
+
+                    printApplicationStats(voltClient, nextCdr);
+                }
+
             }
 
-            if (lateMessages.size() > 100000 || dupMessages.size() > 100000) {
-                sendRemainingMessages();
-            }
+            // Get some stats!
+            gatherInputLagStats();
 
-            if (laststatstime + 10000 < System.currentTimeMillis()) {
-
-                double recordsProcessed = recordCount - lastReportedRecordCount;
-                actualTps = 1000 * (recordsProcessed / (System.currentTimeMillis() - laststatstime));
-
-                msg("Offset = " + offset + " Record " + recordCount + " TPS=" + (long) actualTps);
-                msg("Active Sessions: " + sessionMap.size());
-                msg("Bursting Sessions: " + activeSessionQueue.size());
-
-                msg(shc.toString());
-
-                laststatstime = System.currentTimeMillis();
-                lastReportedRecordCount = recordCount;
-
-                printApplicationStats(voltClient, nextCdr);
-            }
-
+            sendRemainingMessages();
         }
-
-        // Get some stats!
-        gatherInputLagStats();
-
-        sendRemainingMessages();
 
         try {
             voltClient.drain();
@@ -540,7 +559,7 @@ public class MediationDataGenerator {
         if (args.length != 13) {
             msg("Usage: MediationDataGenerator hostnames kafkaHostnames userCount tpMs durationSeconds missingRatio dupRatio lateRatio dateis1970Ratio offset userkafkaflag kafkaPort maxActiveSessions");
             msg("where missingRatio, dupRatio, lateRatio and dateis1970Ratio are '1 in' ratios - i.e. 100 means 1%");
-            msg("For userkafkaflag any value > zero means to use kafka instead of directly speaking to Volt");
+            msg("For userkafkaflag 0 means speak directy to Volt. 1 means to use kafka instead. 2 means use Kafka to write but don't run a consumer");
             msg("maxActiveSessions is a special cache for 'busy' sessions");
             System.exit(2);
         }
@@ -656,16 +675,15 @@ public class MediationDataGenerator {
         props.put("buffer.memory", 33554432);
         props.put("key.serializer", keySerializer);
         props.put("value.serializer", valueSerializer);
-        
+
         // Allow user to override partitioner with -DKAFKA_PARTITONER_NAME=foo
-        String partitionerName = System.getProperty(KAFKA_PARTITONER_NAME,VoltDBKafkaPartitioner.class.getName());
-        
+        String partitionerName = System.getProperty(KAFKA_PARTITONER_NAME, VoltDBKafkaPartitioner.class.getName());
+
         if (partitionerName.length() > 0) {
-            props.put(ProducerConfig.PARTITIONER_CLASS_CONFIG,partitionerName );            
+            props.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, partitionerName);
         } else {
             msg("not setting ProducerConfig.PARTITIONER_CLASS_CONFIG");
         }
-             
 
         msg("Connecting to VoltDB via Kafka using " + kafkaBrokers.toString() + " and " + partitionerName);
 
