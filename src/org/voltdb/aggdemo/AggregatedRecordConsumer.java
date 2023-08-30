@@ -90,6 +90,8 @@ public class AggregatedRecordConsumer implements Runnable {
 
         try {
 
+            MediationDataGenerator.msg("AggregatedRecordConsumer starting...");
+            
             String[] hostnameArray = commaDelimitedHostnames.split(",");
 
             StringBuffer kafkaBrokers = new StringBuffer();
@@ -123,6 +125,8 @@ public class AggregatedRecordConsumer implements Runnable {
                 Date aggDate = null;
 
                 if (records != null) {
+                    
+                    sph.incCounter("AGGED_RECORDS", records.count());
 
                     for (ConsumerRecord<String, String> record : records) {
 
@@ -130,6 +134,8 @@ public class AggregatedRecordConsumer implements Runnable {
 
                         if (messageCounter % SAMPLE_FREQUENCY == 0) {
                             String commaSeperatedValue = record.value();
+                            MediationDataGenerator.msg(commaSeperatedValue);
+                            
                             String[] commaSeperatedValues = commaSeperatedValue.split(",");
 
                             Date tempDate = formatter.parse(commaSeperatedValues[10]);
@@ -171,9 +177,11 @@ public class AggregatedRecordConsumer implements Runnable {
     }
 
     public static void main(String[] args) throws Exception {
+        
+        MediationDataGenerator.msg("Parameters:" + Arrays.toString(args));
 
         if (args.length != 3) {
-            MediationDataGenerator.msg("Usage: AggregatedRecordConsumer  kafkaHostnames kafkaPort durationSeconds");
+            MediationDataGenerator.msg("Usage: AggregatedRecordConsumer kafkaHostnames kafkaPort durationSeconds");
             System.exit(2);
         }
         
