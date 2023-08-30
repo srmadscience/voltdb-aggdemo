@@ -626,11 +626,16 @@ public class MediationDataGenerator {
                 }
             }
 
-            msg("Connected to VoltDB");
+            if (client.getConnectedHostList().size() > 0) {
+                msg("Connected to Volt");
+            }
+            else {
+                msg("Warning: Not Connected to Volt");
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
-            throw new Exception("VoltDB connection failed.." + e.getMessage(), e);
+            throw new Exception("Volt connection failed.." + e.getMessage(), e);
         }
 
         return client;

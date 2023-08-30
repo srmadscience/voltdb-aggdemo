@@ -170,4 +170,28 @@ public class AggregatedRecordConsumer implements Runnable {
         keepGoing = false;
     }
 
+    public static void main(String[] args) throws Exception {
+
+        if (args.length != 3) {
+            MediationDataGenerator.msg("Usage: AggregatedRecordConsumer  kafkaHostnames kafkaPort durationSeconds");
+            System.exit(2);
+        }
+        
+        String kafkaHostnames = args[0];
+        int kafkaPort = Integer.parseInt(args[1]);
+        int durationSeconds = Integer.parseInt(args[2]);
+
+        AggregatedRecordConsumer arc = new AggregatedRecordConsumer(kafkaHostnames, kafkaPort);
+
+        Thread thread = new Thread(arc, "AggRecordConsumer");
+        thread.start();
+        MediationDataGenerator.msg("Agg record consumer is thread " + thread.getName());
+
+        Thread.sleep(durationSeconds * 1000);
+
+        arc.stop();
+        System.exit(0);
+
+    }
+
 }
