@@ -58,11 +58,6 @@ public class AggregatedRecordConsumer implements Runnable {
     boolean keepGoing = true;
 
     /**
-     * How often we sample
-     */
-    final int SAMPLE_FREQUENCY = 100;
-
-    /**
      * Date format mask
      */
     final String VOLT_EXPORTED_DATE_MASK = "yyyy-MM-dd HH:mm:ss.SSS";
@@ -136,7 +131,6 @@ public class AggregatedRecordConsumer implements Runnable {
 
                         messageCounter++;
 
-                        if (messageCounter % SAMPLE_FREQUENCY == 0) {
                             String commaSeperatedValue = record.value();
                             MediationDataGenerator.msg(commaSeperatedValue);
                             
@@ -149,7 +143,7 @@ public class AggregatedRecordConsumer implements Runnable {
                                 aggDate = new Date(tempDate.getTime());
                             }
 
-                        }
+                        
 
                     }
 
