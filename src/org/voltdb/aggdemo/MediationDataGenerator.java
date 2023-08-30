@@ -190,7 +190,7 @@ public class MediationDataGenerator {
         voltClient = connectVoltDB(hostnames);
 
         msg("Create Agg record consumer");
-        arc = new AggregatedRecordConsumer(hostnames);
+        arc = new AggregatedRecordConsumer(hostnames, kafkaPort);
 
         msg("Start Agg record consumer");
 
@@ -685,11 +685,11 @@ public class MediationDataGenerator {
             msg("not setting ProducerConfig.PARTITIONER_CLASS_CONFIG");
         }
 
-        msg("Connecting to VoltDB via Kafka using " + kafkaBrokers.toString() + " and " + partitionerName);
+        msg("Connecting to Kafka using " + kafkaBrokers.toString() + " and " + partitionerName);
 
         Producer<Long, MediationMessage> newProducer = new KafkaProducer<>(props);
 
-        msg("Connected to VoltDB via Kafka");
+        msg("Connected to Kafka");
 
         return newProducer;
 

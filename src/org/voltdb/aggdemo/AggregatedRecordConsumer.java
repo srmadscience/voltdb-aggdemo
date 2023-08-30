@@ -72,14 +72,17 @@ public class AggregatedRecordConsumer implements Runnable {
      */
     SimpleDateFormat formatter = new SimpleDateFormat(VOLT_EXPORTED_DATE_MASK);
 
+    int kafkaPort;
+
     /**
      * Create a runnable instance of a class to poll the Kafka topic aggregated_cdrs
      *
      * @param hostnames - hostname1:9092,hostname2:9092 etc
      */
-    public AggregatedRecordConsumer(String commaDelimitedHostnames) {
+    public AggregatedRecordConsumer(String commaDelimitedHostnames, int kafkaPort) {
         super();
         this.commaDelimitedHostnames = commaDelimitedHostnames;
+        this.kafkaPort = kafkaPort;
     }
 
     @Override
@@ -92,7 +95,8 @@ public class AggregatedRecordConsumer implements Runnable {
             StringBuffer kafkaBrokers = new StringBuffer();
             for (int i = 0; i < hostnameArray.length; i++) {
                 kafkaBrokers.append(hostnameArray[i]);
-                kafkaBrokers.append(":9092");
+                kafkaBrokers.append(":");
+                kafkaBrokers.append(kafkaPort);
 
                 if (i < (hostnameArray.length - 1)) {
                     kafkaBrokers.append(',');
@@ -117,9 +121,9 @@ public class AggregatedRecordConsumer implements Runnable {
                 ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
 
                 Date aggDate = null;
-                
+
                 if (records != null) {
-                    
+
                     for (ConsumerRecord<String, String> record : records) {
 
                         messageCounter++;
@@ -142,7 +146,7 @@ public class AggregatedRecordConsumer implements Runnable {
                     if (records.count() > 0) {
                         sph.reportLatency(MediationDataGenerator.OUTPUT_LAG, aggDate.getTime(), "",
                                 MediationDataGenerator.OUTPUT_LAG_HISTOGRAM_SIZE, records.count());
-                        
+
                         sph.report(MediationDataGenerator.OUTPUT_POLL_BATCHSIZE, records.count(), "", 1000);
                     }
                 }
