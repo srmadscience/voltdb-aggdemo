@@ -121,10 +121,14 @@ public class AggregatedRecordConsumer implements Runnable {
             while (keepGoing) {
 
                 ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
+                
+                sph.incCounter("CONSUMER_POLLS");
 
                 Date aggDate = null;
 
                 if (records != null) {
+                    
+                    sph.reportSize("POLL_SIZE", kafkaPort, "", 10000);
                     
                     sph.incCounter("AGGED_RECORDS", records.count());
 
