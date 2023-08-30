@@ -185,11 +185,16 @@ public class AggregatedRecordConsumer implements Runnable {
 
         Thread thread = new Thread(arc, "AggRecordConsumer");
         thread.start();
+        
         MediationDataGenerator.msg("Agg record consumer is thread " + thread.getName());
 
         Thread.sleep(durationSeconds * 1000);
 
         arc.stop();
+        
+        SafeHistogramCache sph = SafeHistogramCache.getInstance();
+        
+        MediationDataGenerator.msg(sph.toString());
         System.exit(0);
 
     }
