@@ -128,7 +128,6 @@ public class AggregatedRecordConsumer implements Runnable {
                     for (ConsumerRecord<String, String> record : records) {
 
                         String commaSeperatedValue = record.value();
-                        MediationDataGenerator.msg(commaSeperatedValue);
 
                         String[] commaSeperatedValues = commaSeperatedValue.split(",");
 
