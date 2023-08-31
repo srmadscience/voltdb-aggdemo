@@ -86,7 +86,7 @@ public class AggregatedRecordConsumer implements Runnable {
         try {
 
             MediationDataGenerator.msg("AggregatedRecordConsumer starting...");
-            
+
             String[] hostnameArray = commaDelimitedHostnames.split(",");
 
             StringBuffer kafkaBrokers = new StringBuffer();
@@ -111,48 +111,41 @@ public class AggregatedRecordConsumer implements Runnable {
             KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props);
             consumer.subscribe(Arrays.asList("aggregated_cdrs"));
 
-            long messageCounter = 0;
-
             while (keepGoing) {
 
                 ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
-                
+
                 sph.incCounter("CONSUMER_POLLS");
 
                 Date aggDate = null;
 
                 if (records != null) {
-                    
+
                     sph.reportSize("POLL_SIZE", kafkaPort, "", 10000);
-                    
+
                     sph.incCounter("AGGED_RECORDS", records.count());
 
                     for (ConsumerRecord<String, String> record : records) {
 
-                        messageCounter++;
+                        String commaSeperatedValue = record.value();
+                        MediationDataGenerator.msg(commaSeperatedValue);
 
-                            String commaSeperatedValue = record.value();
-                            MediationDataGenerator.msg(commaSeperatedValue);
-                            
-                            String[] commaSeperatedValues = commaSeperatedValue.split(",");
-                            
-                            // If the export has metadata there will be 17 columns, otherwise 11...
-                            
-                            Date tempDate = null;
+                        String[] commaSeperatedValues = commaSeperatedValue.split(",");
 
-                            if (commaSeperatedValues.length == 11) {
-                                tempDate = formatter.parse(commaSeperatedValues[10]);
-                            } else {
-                                tempDate = formatter.parse(commaSeperatedValues[16]);
-                            }
- 
+                        // If the export has metadata there will be 17 columns, otherwise 11...
 
-                            // Find oldest record in the batch...
-                            if (aggDate == null || tempDate.before(aggDate)) {
-                                aggDate = new Date(tempDate.getTime());
-                            }
+                        Date tempDate = null;
 
-                        
+                        if (commaSeperatedValues.length == 11) {
+                            tempDate = formatter.parse(commaSeperatedValues[10].replace("\"", ""));
+                        } else {
+                            tempDate = formatter.parse(commaSeperatedValues[16].replace("\"", ""));
+                        }
+
+                        // Find oldest record in the batch...
+                        if (aggDate == null || tempDate.before(aggDate)) {
+                            aggDate = new Date(tempDate.getTime());
+                        }
 
                     }
 
@@ -160,7 +153,7 @@ public class AggregatedRecordConsumer implements Runnable {
                         sph.reportLatency(MediationDataGenerator.OUTPUT_LAG, aggDate.getTime(), "",
                                 MediationDataGenerator.OUTPUT_LAG_HISTOGRAM_SIZE, records.count());
 
-                        sph.report(MediationDataGenerator.OUTPUT_POLL_BATCHSIZE, records.count(), "", 1000);
+                        sph.report(MediationDataGenerator.OUTPUT_POLL_BATCHSIZE, records.count(), "", 10000);
                     }
                 }
 
@@ -184,14 +177,14 @@ public class AggregatedRecordConsumer implements Runnable {
     }
 
     public static void main(String[] args) throws Exception {
-        
+
         MediationDataGenerator.msg("Parameters:" + Arrays.toString(args));
 
         if (args.length != 3) {
             MediationDataGenerator.msg("Usage: AggregatedRecordConsumer kafkaHostnames kafkaPort durationSeconds");
             System.exit(2);
         }
-        
+
         String kafkaHostnames = args[0];
         int kafkaPort = Integer.parseInt(args[1]);
         int durationSeconds = Integer.parseInt(args[2]);
@@ -200,15 +193,15 @@ public class AggregatedRecordConsumer implements Runnable {
 
         Thread thread = new Thread(arc, "AggRecordConsumer");
         thread.start();
-        
+
         MediationDataGenerator.msg("Agg record consumer is thread " + thread.getName());
 
         Thread.sleep(durationSeconds * 1000);
 
         arc.stop();
-        
+
         SafeHistogramCache sph = SafeHistogramCache.getInstance();
-        
+
         MediationDataGenerator.msg(sph.toString());
         System.exit(0);
 
