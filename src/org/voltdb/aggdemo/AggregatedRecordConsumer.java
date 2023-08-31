@@ -135,8 +135,17 @@ public class AggregatedRecordConsumer implements Runnable {
                             MediationDataGenerator.msg(commaSeperatedValue);
                             
                             String[] commaSeperatedValues = commaSeperatedValue.split(",");
+                            
+                            // If the export has metadata there will be 17 columns, otherwise 11...
+                            
+                            Date tempDate = null;
 
-                            Date tempDate = formatter.parse(commaSeperatedValues[10]);
+                            if (commaSeperatedValues.length == 11) {
+                                tempDate = formatter.parse(commaSeperatedValues[10]);
+                            } else {
+                                tempDate = formatter.parse(commaSeperatedValues[16]);
+                            }
+ 
 
                             // Find oldest record in the batch...
                             if (aggDate == null || tempDate.before(aggDate)) {
