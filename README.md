@@ -1,4 +1,4 @@
-|hostnames|Which db servers we’re connecting to. Comma delimited.|vdb1,vdb2,vdb3<img title="Volt Active Data" alt="Volt Active Data Logo" src="http://52.210.27.140:8090/voltdb-awswrangler-servlet/VoltActiveData.png">
+<img title="Volt Active Data" alt="Volt Active Data Logo" src="http://52.210.27.140:8090/voltdb-awswrangler-servlet/VoltActiveData.png">
 
 # voltdb-aggdemo
 A demonstration of how VoltDB can be used for the kind of streaming aggregation tasks common in Telco
@@ -188,7 +188,7 @@ It takes the following parameters:
 
 |Name|Meaning|Example Value|
 |-|-|-|
-|hostnames|Which db servers we’re connecting to. Comma delimited.|vdb1,vdb2,vdb3|hostnames|Which db servers we’re connecting to. Comma delimited.|vdb1,vdb2,vdb3
+|hostnames|Which db servers we’re connecting to. Comma delimited.|vdb1,vdb2,vdb3|
 |kafka hostnames|Which kafka servers we’re connecting to. Comma delimited.|vdb1,vdb2,vdb3|
 |userCount|How many users we have|500000|
 |tpms|How many transactions to attempt each millisecond.|80|
