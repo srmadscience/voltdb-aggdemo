@@ -121,7 +121,7 @@ public class AggregatedRecordConsumer implements Runnable {
 
                 if (records != null) {
 
-                    sph.reportSize("POLL_SIZE", kafkaPort, "", 10000);
+                    sph.reportSize("POLL_SIZE", records.count(), "", 10000);
 
                     sph.incCounter("AGGED_RECORDS", records.count());
 
