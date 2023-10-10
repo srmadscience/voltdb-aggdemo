@@ -199,7 +199,7 @@ It takes the following parameters:
 |dateis1970Ratio|How often we produce a late record with an unreasonably early timestamp we can’t process. A value of ‘2000’ means that 1 in 2000 records will be for 1-Jan-1970. A value of ‘-1’ disables these records|2000|
 |offset|Number to add to session id’s, which normally start at zero. Used when we want to run multiple copies of the generator at the same time.|0|
 |use Kafka|> 0 means to use Kafka instead of writing directly to Volt|1|
-|max session cache size|> 0 means to have a set of sessions that get 10 transactions as quickly as possible|100000|
+|max session cache size ('maxactivesessions')|> 0 means to have a set of sessions that get 10 transactions as quickly as possible|100000|
 
 An example usage would be:
 
