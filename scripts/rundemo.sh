@@ -27,7 +27,7 @@ do
 	sleep 60
 	for i in 0 100000 200000 300000 400000 500000 600000 700000 800000 900000
 	do
-       		nohup ${JVMOPTS} java -jar voltdb-aggdemo-client.jar ${VDBHOSTS} ${KAFKAHOSTS} ${USERCOUNT} $j ${DURATION} 1000 1000 1000 10000 $i ${KAF} ${KAFKAPORT} 10000 > ${RUNSTART}_${j}_${i}.out &
+       		nohup java  ${JVMOPTS} -jar voltdb-aggdemo-client.jar ${VDBHOSTS} ${KAFKAHOSTS} ${USERCOUNT} $j ${DURATION} 1000 1000 1000 10000 $i ${KAF} ${KAFKAPORT} 10000 > ${RUNSTART}_${j}_${i}.out &
 		sleep 1
 	done
 	wait
