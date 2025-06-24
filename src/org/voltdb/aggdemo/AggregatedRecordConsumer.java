@@ -17,6 +17,7 @@ import java.util.Properties;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.producer.ProducerConfig;
 import org.voltdb.voltutil.stats.SafeHistogramCache;
 
 /**
@@ -92,6 +93,7 @@ public class AggregatedRecordConsumer implements Runnable {
             props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
             props.put("auto.commit.interval.ms", "100");
             props.put("auto.offset.reset", "latest");
+            
 
             KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props);
             consumer.subscribe(Arrays.asList("aggregated_cdrs"));
