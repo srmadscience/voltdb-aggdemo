@@ -1,0 +1,11 @@
+<topics enabled="true">
+       <broker>
+            <property name="cluster.id">3</property>
+            <property name="network.thread.count">25</property>
+        </broker>
+<topic name="incoming_cdrs" procedure="HandleMediationCDR">
+</topic>
+<topic name="bad_cdrs" retention="2hr"/>
+<topic name="unaggregated_cdrs" retention="2hr"/>
+<topic name="aggregated_cdrs" retention="2hr"/>
+</topics>
