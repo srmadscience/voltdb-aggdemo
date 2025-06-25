@@ -89,6 +89,8 @@ public class MediationDataGenerator {
 
     private static final int WRITE_TO_KAFKA_WITH_CONSUMER = 1;
     private static final int WRITE_TO_KAFKA_BUT_NO_CONSUMER = 2;
+    
+    private final static int VOLT_PORT=21212;
 
     public static SafeHistogramCache shc = SafeHistogramCache.getInstance();
 
@@ -644,19 +646,26 @@ public class MediationDataGenerator {
         String[] hostnameArray = commaDelimitedHostnames.split(",");
 
         StringBuffer kafkaBrokers = new StringBuffer();
+        StringBuffer voltServers = new StringBuffer();
+        
         for (int i = 0; i < hostnameArray.length; i++) {
             kafkaBrokers.append(hostnameArray[i]);
             kafkaBrokers.append(":");
             kafkaBrokers.append(kafkaPort);
+            
+            voltServers.append(hostnameArray[i]);
+            voltServers.append(":");
+            voltServers.append(VOLT_PORT);
 
             if (i < (hostnameArray.length - 1)) {
                 kafkaBrokers.append(',');
+                voltServers.append(',');
             }
         }
 
         Properties props = new Properties();
         props.put("bootstrap.servers", kafkaBrokers.toString());
-        props.put("bootstrap.servers.voltdb", commaDelimitedHostnames);
+        props.put("bootstrap.servers.voltdb", voltServers.toString());
         props.put("acks", "all");
         props.put("retries", 0);
 

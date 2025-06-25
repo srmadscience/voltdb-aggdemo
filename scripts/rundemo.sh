@@ -16,7 +16,7 @@ USERCOUNT=100000
 KAF=1
 DURATION=3600
 VDBHOSTS=`cat $HOME/.vdbhostnames`
-KAFKAHOSTS=`cat $HOME/.vdbhostnames`
+KAFKAHOSTS=vdb1
 RUNSTART=`date '+%y%m%d_%H%M'`
 KAFKAPORT=9092
 

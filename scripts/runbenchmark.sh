@@ -16,7 +16,7 @@ cd ../jars
 USERCOUNT=100000
 DURATION=600
 VDBHOSTS=`cat $HOME/.vdbhostnames`
-KAFKAHOSTS=`cat $HOME/.vdbhostnames`
+KAFKAHOSTS=vdb1
 RUNSTART=`date '+%y%m%d_%H%M'`
 KAFKAPORT=9092
 START_TPS=10
